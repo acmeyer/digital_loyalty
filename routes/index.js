@@ -1,5 +1,4 @@
 var express = require('express');
-var passport = require('passport');
 var jwt = require('jwt-simple');
 
 var router = express.Router();
@@ -32,14 +31,14 @@ router.get('/api/v1/customers', customers.getAll);
 router.get('/api/v1/customer/:id', customers.getOne);
 router.post('/api/v1/customer/', customers.create);
 router.put('/api/v1/customer/:id', customers.update);
-router.delete('/api/v1/customer/:id', customers.delete);
+// router.delete('/api/v1/customer/:id', customers.delete);
 
 // Transactions
 router.get('/api/v1/transactions', transactions.getAll);
 router.get('/api/v1/transaction/:id', transactions.getOne);
 router.post('/api/v1/transaction/', transactions.create);
 router.put('/api/v1/transaction/:id', transactions.update);
-router.delete('/api/v1/transaction/:id', transactions.delete);
+// router.delete('/api/v1/transaction/:id', transactions.delete);
  
 /*
  * Routes that can be accessed only by authenticated & authorized users

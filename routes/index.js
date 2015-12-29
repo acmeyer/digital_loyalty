@@ -1,4 +1,7 @@
 var express = require('express');
+var passport = require('passport');
+var jwt = require('jwt-simple');
+
 var router = express.Router();
  
 var auth = require('./auth.js');

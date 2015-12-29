@@ -1,9 +1,11 @@
+var app = require('../app.js');
+var config = require('../config.js');
 var jwt = require('jwt-simple');
 
 var User = require('../models/user');
  
 var auth = {
- 
+
   login: function(req, res) {
  
     var username = req.body.username || '';
@@ -18,52 +20,110 @@ var auth = {
       return;
     }
  
-    // Fire a query to your DB and check if the credentials are valid
-    var user = auth.validate(username, password);
+    // Fire a query to the DB and check if the credentials are valid
+    User.findOne({
+      username: username
+    }, function(err, user) {
+      if (err) throw err;
+      if (!user) {
+        res.status(401);
+        res.json({ "status": 401, "message": "Authentication failed. User not found."});
+      } else if (user) {
+        user.comparePassword(password, function(err, isMatch) {
+          if (err) throw err;
+          if (!isMatch) {
+            res.status(401);
+            res.json({"status": 401, "message": "Authentication failed. Password is incorrect."});
+          } else {
+            // If authentication is success, we will generate a token
+            // and dispatch it to the client
+            res.json(genToken(user));
+          }
+        })
+      }
+    });
+  },
+
+  validate: function(req, res, next) {
+ 
+    // When performing a cross domain request, you will recieve
+    // a preflighted request first. This is to check if our the app
+    // is safe. 
    
-    if (!user) { // If authentication fails, we send a 401 back
+    // We skip the token outh for [OPTIONS] requests.
+    //if(req.method == 'OPTIONS') next();
+   
+    var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers['x-access-token'];
+    var key = (req.body && req.body.x_key) || (req.query && req.query.x_key) || req.headers['x-key'];
+   
+    if (token || key) {
+      try {
+        var decoded = jwt.decode(token, config.secret);
+   
+        if (decoded.exp <= Date.now()) {
+          res.status(400);
+          res.json({
+            "status": 400,
+            "message": "Token Expired"
+          });
+          return;
+        }
+   
+        // Authorize the user to see if s/he can access our resources
+        User.findById(decoded.iss, function(err, user) {
+          if (err) throw err;
+          if (user) {
+            if ((req.url.indexOf('admin') >= 0 && user.admin) || (req.url.indexOf('admin') < 0 && req.url.indexOf('/api/v1/') >= 0)) {
+              next(); // To move to next middleware
+            } else {
+              res.status(403);
+              res.json({
+                "status": 403,
+                "message": "Not Authorized"
+              });
+              return;
+            }
+          } else {
+            // No user with this id exists
+            res.status(401);
+            res.json({
+              "status": 401,
+              "message": "Invalid User"
+            });
+            return;
+          }
+        })
+   
+      } catch (err) {
+        res.status(500);
+        res.json({
+          "status": 500,
+          "message": "Oops something went wrong",
+          "error": err
+        });
+      }
+    } else {
       res.status(401);
       res.json({
         "status": 401,
-        "message": "Invalid credentials"
+        "message": "Invalid Token or Key"
       });
       return;
     }
- 
-    if (user) {
-      // If authentication is success, we will generate a token
-      // and dispatch it to the client
-      res.json(genToken(user));
-    }
- 
-  },
- 
-  validate: function(username, password) {
-    User.findOne({'username': username, 'password': password}, function(err, user) {
-      if (err) return false
-      return user
-    })
-  },
- 
-  validateUser: function(username) {
-    User.findOne({'username': username}, function(err, user) {
-      if (err) return false
-      return user
-    })
-  },
+  }
 }
- 
+
 // private method
 function genToken(user) {
-  var expires = expiresIn(14); // 14 days
+  var expires = expiresIn(7); // 7 days
   var token = jwt.encode({
+    iss: user.id,
     exp: expires
-  }, require('../config/secret')());
+  }, config.secret);
  
   return {
     token: token,
-    expires: expires,
-    user: user
+    expires: expires
   };
 }
  

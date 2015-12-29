@@ -7,9 +7,12 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var mongoose = require('mongoose');
+var morgan = require('morgan');
 var Colu = require('colu');
 
 var app = express();
+
+var auth = require('./routes/auth.js');
 
 // Database
 mongoose.connect(process.env.MONGOLAB_URI, function(err, db) {
@@ -18,7 +21,7 @@ mongoose.connect(process.env.MONGOLAB_URI, function(err, db) {
 
 // App
 app.use(helmet());
-app.use(logger('dev'));
+app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -43,8 +46,7 @@ app.all('/*', function(req, res, next) {
 // Only the requests that start with /api/v1/* will be checked for the token.
 // Any URL's that do not follow the below pattern should be avoided unless you 
 // are sure that authentication is not needed
-app.all('/api/v1/*', [require('./middlewares/validateRequest')]);
- 
+app.all('/api/v1/*', auth.validate);
 app.use('/', require('./routes'));
 
 // catch 404 and forward to error handler
@@ -56,7 +58,7 @@ app.use(function(req, res, next) {
 
 // Colu engine setup
 var settings = {
-    network: 'mainnet',
+    network: process.env.COLU_NETWORK,
     apiKey: process.env.COLU_KEY,
     privateSeed: process.env.COLU_PRIVATE_SEED
 }

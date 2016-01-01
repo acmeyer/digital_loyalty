@@ -4,30 +4,34 @@ var router = express.Router();
 var Asset = require('../models/asset');
 
 var assets = {
+
   /* GET all assets */
   getAll: function(req, res) {
     Asset.find(function(err, assets) {
-      if (err) {
-        res.send(err);
-      } else {
+      if (err) res.send(err);
         
-        // Also get data from blockchain here
-        
-        res.send(assets);
-      }
+      // Get asset information from the blockchain
+      blockchainAssets = [];
+      assets.each(function(index, asset) {
+        colu.coloredCoins.getAssetData({assetId: asset.id}, function(err, body) {
+          if (err) res.send(err);
+          blockchainAssets.push(JSON.stringify(body));
+        })
+      });
+      res.json(blockchainAssets);
     })
   },
 
   /* GET asset */
   getOne: function(req, res) {
     Asset.findById(req.params.id, function(err, asset) {
-      if (err) {
-        res.send(err)
-      } else {
-        // Also get data from blockchain here
+      if (err) res.send(err)
 
-        res.send(asset)
-      }
+      // Get data from blockchain
+      colu.coloredCoins.getAssetData({assetId: asset.id}, function(err, body) {
+        if (err) res.send(err);
+        res.json(JSON.stringify(body));
+      })
     })
   },
 
@@ -49,16 +53,20 @@ var assets = {
 
       // Need to save more info about the asset here
       var asset = new Asset({
-        assetName: assetName,
-        amount: amount,
-        assetId: result.assetId,
-        issueAddress: result.issueAdress
+        assetId: result.assetId
       });
+
+      // if an account's wallet address is empty, 
+      // populate it with the returned asset issue address
+      // if (!account.walletAddress) account.update({walletAddress: result.issueAdress}, function (err, raw) {
+      //   if (err) return res.send(err);
+      // });
 
       asset.save(function(err) {
         if (err) {
           res.send(err);
         } else {
+          res.status(200);
           res.json({message: 'Created asset!'});
         }
       })
@@ -68,57 +76,41 @@ var assets = {
   /* SEND asset */
   send: function(req, res) {
     Asset.findById(req.params.id, function(err, asset) {
-      if (err) {
-        res.send(err)
-      } else {
-        var assetId = asset.assetId
-        var toAddress = req.body.toAddress
-        var fromAddress = asset.issueAdress
-        var amount = req.body.amount
+      if (err) res.send(err);
 
-        var settings = {
-          'from': fromAddress,
-          'to': [{
-            'address': address,
-            'assetId': assetId,
-            'amount': amount
-          }]
-        }
-        colu.sendAsset(settings, function (err, result) {
-          if (err) return next(err)
-          asset.amount -= 1
+      var assetId = asset.assetId
+      var toAddress = req.body.toAddress
+      var fromAddress = asset.issueAdress
+      var amount = req.body.amount
 
-          // Also want to save transaction information here
-
-          asset.save(function(err) {
-            if (err) {
-              res.send(err)
-            } else {
-              res.json({ message: "Asset sent!"})
-            }
-          })
-        })
+      var settings = {
+        'from': fromAddress,
+        'to': [{
+          'address': address,
+          'assetId': assetId,
+          'amount': amount
+        }]
       }
+      colu.sendAsset(settings, function (err, result) {
+        if (err) return next(err)
+        // Also want to save transaction information here
+        res.json({ message: "Asset sent!"})
+      })
     })
   },
 
   /* UPDATE asset */
   update: function(req, res) {
     Asset.findById(req.params.id, function(err, asset) {
-      if (err) {
-        res.send(err)
-      } else {
-        // Update many different fields potentially here
-        asset.assetName = req.body.assetName;
-        asset.save(function(err) {
-          if (err) {
-            res.send(err);
-          } else {
-            // Can we also update info of the asset on the blockchain?
-            res.json({ message: "Asset updated!"});
-          }
-        })
-      }
+      if (err) res.send(err);
+
+      // Update many different fields potentially here
+      asset.save(function(err) {
+        if (err) res.send(err);
+        
+        // Can we also update info of the asset on the blockchain?
+        res.json({ message: "Asset updated!"});
+      })
     })
   },
 
@@ -127,12 +119,10 @@ var assets = {
     Asset.remove({
       _id: req.params.asset_id
     }, function(err, asset) {
-      if (err) {
-        res.send(err)
-      } else {
-        // Remove from the blockchain?
-        res.json({message: "Asset removed!"})
-      }
+      if (err) res.send(err);
+      
+      // Remove from the blockchain?
+      res.json({message: "Asset removed!"})
     })
   }
 }

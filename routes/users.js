@@ -4,23 +4,15 @@ var router = express.Router();
 var User = require('../models/user');
 
 var users = {
-  getAll: function(req, res) {
+  me: function(req, res) {
     res.send();
   },
 
-  getOne: function(req, res) {
+  send: function(req, res) {
     res.send();
   },
 
-  create: function(req, res) {
-    res.send();
-  },
-
-  update: function(req, res) {
-    res.send();
-  },
-
-  delete: function(req, res) {
+  redeem: function(req, res) {
     res.send();
   }
 }

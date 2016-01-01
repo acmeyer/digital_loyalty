@@ -20,28 +20,37 @@ var auth = {
       return;
     }
  
-    // Fire a query to the DB and check if the credentials are valid
-    User.findOne({
-      username: username
-    }, function(err, user) {
-      if (err) throw err;
-      if (!user) {
-        res.status(401);
-        res.json({ "status": 401, "message": "Authentication failed. User not found."});
-      } else if (user) {
-        user.comparePassword(password, function(err, isMatch) {
-          if (err) throw err;
-          if (!isMatch) {
-            res.status(401);
-            res.json({"status": 401, "message": "Authentication failed. Password is incorrect."});
-          } else {
-            // If authentication is success, we will generate a token
-            // and dispatch it to the client
-            res.json(genToken(user));
-          }
-        })
-      }
-    });
+    try {
+      // Fire a query to the DB and check if the credentials are valid
+      User.findOne({
+        username: username
+      }, function(err, user) {
+        if (err) throw err;
+        if (!user) {
+          res.status(401);
+          res.json({ "status": 401, "message": "Authentication failed. User not found."});
+        } else if (user) {
+          user.comparePassword(password, function(err, isMatch) {
+            if (err) throw err;
+            if (!isMatch) {
+              res.status(401);
+              res.json({"status": 401, "message": "Authentication failed. Password is incorrect."});
+            } else {
+              // If authentication is success, we will generate a token
+              // and dispatch it to the client
+              res.json(genToken(user));
+            }
+          })
+        }
+      });
+    } catch (err) {
+      res.status(500);
+      res.json({
+        "status": 500,
+        "message": "Oops something went wrong",
+        "error": err
+      });
+    }
   },
 
   validate: function(req, res, next) {
@@ -73,15 +82,45 @@ var auth = {
         User.findById(decoded.iss, function(err, user) {
           if (err) throw err;
           if (user) {
-            if ((req.url.indexOf('admin') >= 0 && user.admin) || (req.url.indexOf('admin') < 0 && req.url.indexOf('/api/v1/') >= 0)) {
-              next(); // To move to next middleware
-            } else {
-              res.status(403);
-              res.json({
-                "status": 403,
-                "message": "Not Authorized"
-              });
-              return;
+            switch(user.role) {
+              case "Admin":
+                next();
+                break;
+              case "Merchant":
+                var userBelongsToAccount = user.accounts.some(function (account) {
+                    return account.equals(req.params.account_id);
+                });
+
+                if (req.url.indexOf('admin') >= 0 || ((req.url.indexOf('/api/v1/accounts') < 0 && req.url.indexOf('/api/v1/me') < 0) && !userBelongsToAccount)) {
+                  res.status(403);
+                  res.json({
+                    "status": 403,
+                    "message": "Not Authorized"
+                  });
+                  return;
+                } else {
+                  next();
+                }
+                break;
+              case "Customer":
+                if (req.url.indexOf('admin') >= 0 || req.url.indexOf('/api/v1/account') >= 0) {
+                  res.status(403);
+                  res.json({
+                    "status": 403,
+                    "message": "Not Authorized"
+                  });
+                  return;
+                } else {
+                  next();
+                }
+                break;
+              default:
+                res.status(403);
+                res.json({
+                  "status": 403,
+                  "message": "Not Authorized"
+                });
+                return;
             }
           } else {
             // No user with this id exists

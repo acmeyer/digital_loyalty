@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-var Customer = require('../models/customer');
+var Account = require('../models/account');
 
 var customers = {
   getAll: function(req, res) {

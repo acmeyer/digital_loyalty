@@ -1,11 +1,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var Asset = new Schema({
-  assetName: String,
-  amount: Number,
-  assetId: String,
-  issueAddress: String
-});
+var AssetSchema = new Schema({
+  assetId: String
+}, {timestamps: true});
 
-module.exports = mongoose.model('Asset', Asset);
+module.exports = mongoose.model('Asset', AssetSchema);

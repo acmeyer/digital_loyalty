@@ -5,23 +5,23 @@ var Account = require('../models/account');
 
 var accounts = {
   getAll: function(req, res) {
-    res.json();
+    res.send();
   },
 
   getOne: function(req, res) {
-    res.json();
+    res.send();
   },
 
   create: function(req, res) {
-    res.json();
+    res.send();
   },
 
   update: function(req, res) {
-    res.json();
+    res.send();
   },
 
   delete: function(req, res) {
-    res.json();
+    res.send();
   }
 }
 

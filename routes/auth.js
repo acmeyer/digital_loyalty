@@ -82,16 +82,13 @@ var auth = {
         User.findById(decoded.iss, function(err, user) {
           if (err) throw err;
           if (user) {
+            req.user = user;
             switch(user.role) {
               case "Admin":
                 next();
                 break;
               case "Merchant":
-                var userBelongsToAccount = user.accounts.some(function (account) {
-                    return account.equals(req.params.account_id);
-                });
-
-                if (req.url.indexOf('admin') >= 0 || ((req.url.indexOf('/api/v1/accounts') < 0 && req.url.indexOf('/api/v1/me') < 0) && !userBelongsToAccount)) {
+                if (req.url.indexOf('admin') >= 0 || ((req.url.indexOf('/account') < 0 && req.url.indexOf('/me') < 0))) {
                   res.status(403);
                   res.json({
                     "status": 403,
@@ -103,7 +100,7 @@ var auth = {
                 }
                 break;
               case "Customer":
-                if (req.url.indexOf('admin') >= 0 || req.url.indexOf('/api/v1/account') >= 0) {
+                if (req.url.indexOf('admin') >= 0 || req.url.indexOf('/account') >= 0) {
                   res.status(403);
                   res.json({
                     "status": 403,

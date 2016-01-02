@@ -17,19 +17,23 @@ var users = require('./users')
 router.post('/login', auth.login);
 
 /*
+ * API V1 Routes
+ */
+/*
  * Customer Routes
  */
 router.get('/api/v1/me', users.me);
-router.post('/api/v1/me/send', users.send);
-router.post('/api/v1/me/redeem', users.redeem);
+router.post('/api/v1/me/asset/:asset_id/send', users.send);
  
 /*
  * Merchant Routes
  */
 // Account
 router.get('/api/v1/accounts', accounts.getAll);
-router.get('/api/v1/account/:id', accounts.getOne);
+router.get('/api/v1/account/:account_id', accounts.getOne);
 router.post('/api/v1/account/', accounts.create);
+router.put('/api/v1/account/:account_id', accounts.update);
+router.delete('/api/v1/account/:account_id', accounts.delete);
 
 // Account's Assets
 router.get('/api/v1/account/:account_id/assets', assets.getAll);

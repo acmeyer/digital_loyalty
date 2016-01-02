@@ -27,7 +27,16 @@ var admin = {
     },
 
     create: function(req, res) {
-      res.send();
+      user_params = {
+        username: req.body.username,
+        password: req.body.password,
+        role: req.body.role
+      }
+      User.create(user_params, function(err, user) {
+        if (err) res.send(err)
+
+        res.send(user)
+      })
     },
 
     update: function(req, res) {

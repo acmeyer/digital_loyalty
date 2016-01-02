@@ -9,6 +9,9 @@ var helmet = require('helmet');
 var mongoose = require('mongoose');
 var morgan = require('morgan');
 var Colu = require('colu');
+if (process.env.NODE_ENV !== 'production'){
+  require('longjohn');
+}
 
 var app = express();
 
@@ -63,7 +66,13 @@ var settings = {
     privateSeed: process.env.COLU_PRIVATE_SEED
 }
 colu = new Colu(settings)
+if (process.env.NODE_ENV !== 'production'){
+  colu.on('connect', function () {
+    console.log('connected to colu')
+  });
+}
 colu.init()
+
 
 // Error handlers
 // development error handler

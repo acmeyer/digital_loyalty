@@ -30,30 +30,30 @@ router.post('/api/v1/me/asset/:asset_id/send', users.send);
  */
 // Account
 router.get('/api/v1/accounts', accounts.getAll);
-router.get('/api/v1/account/:account_id', accounts.getOne);
+router.get('/api/v1/account/:account_id', accounts.authorize, accounts.getOne);
 router.post('/api/v1/account/', accounts.create);
-router.put('/api/v1/account/:account_id', accounts.update);
-router.delete('/api/v1/account/:account_id', accounts.delete);
+router.put('/api/v1/account/:account_id', accounts.authorize, accounts.update);
+router.delete('/api/v1/account/:account_id', accounts.authorize, accounts.delete);
 
 // Account's Assets
-router.get('/api/v1/account/:account_id/assets', assets.getAll);
-router.get('/api/v1/account/:account_id/asset/:id', assets.getOne);
-router.post('/api/v1/account/:account_id/asset/', assets.create);
-router.post('/api/v1/account/:account_id/asset/:id/send', assets.send);
-router.put('/api/v1/account/:account_id/asset/:id', assets.update);
-router.delete('/api/v1/account/:account_id/asset/:id', assets.delete);
+router.get('/api/v1/account/:account_id/assets', accounts.authorize, assets.getAll);
+router.get('/api/v1/account/:account_id/asset/:id', accounts.authorize, assets.getOne);
+router.post('/api/v1/account/:account_id/asset/', accounts.authorize, assets.create);
+router.post('/api/v1/account/:account_id/asset/:id/send', accounts.authorize, assets.send);
+router.put('/api/v1/account/:account_id/asset/:id', accounts.authorize, assets.update);
+router.delete('/api/v1/account/:account_id/asset/:id', accounts.authorize, assets.delete);
 
 // Account's Transactions
-router.get('/api/v1/account/:account_id/transactions', transactions.getAll);
-router.get('/api/v1/account/:account_id/transaction/:id', transactions.getOne);
-router.post('/api/v1/account/:account_id/transaction/', transactions.create);
-router.put('/api/v1/account/:account_id/transaction/:id', transactions.update);
+router.get('/api/v1/account/:account_id/transactions', accounts.authorize, transactions.getAll);
+router.get('/api/v1/account/:account_id/transaction/:id', accounts.authorize, transactions.getOne);
+router.post('/api/v1/account/:account_id/transaction/', accounts.authorize, transactions.create);
+router.put('/api/v1/account/:account_id/transaction/:id', accounts.authorize, transactions.update);
 
 // Account's Customers
-router.get('/api/v1/account/:account_id/customers', customers.getAll);
-router.get('/api/v1/account/:account_id/customer/:id', customers.getOne);
-router.post('/api/v1/account/:account_id/customer/', customers.create);
-router.put('/api/v1/account/:account_id/customer/:id', customers.update);
+router.get('/api/v1/account/:account_id/customers', accounts.authorize, customers.getAll);
+router.get('/api/v1/account/:account_id/customer/:id', accounts.authorize, customers.getOne);
+router.post('/api/v1/account/:account_id/customer/', accounts.authorize, customers.create);
+router.put('/api/v1/account/:account_id/customer/:id', accounts.authorize, customers.update);
  
 /*
  * Admin Routes
@@ -85,5 +85,6 @@ router.get('/api/v1/admin/transactions', admin.transactions.getAll);
 router.get('/api/v1/admin/transaction/:id', admin.transactions.getOne);
 router.post('/api/v1/admin/transaction/', admin.transactions.create);
 router.put('/api/v1/admin/transaction/:id', admin.transactions.update);
+router.delete('/api/v1/admin/transaction/:id', admin.Transactions.delete);
  
 module.exports = router;

@@ -2,46 +2,43 @@ var express = require('express');
 var router = express.Router();
 
 var Account = require('../models/account');
+var User = require('../models/user');
 
 var accounts = {
-  getAll: function(req, res) {
-    // Find all accounts for current user
-    // TODO: Need to figure this one out!!!
-    // var current_user = req.user;
-    // Account.find().where, function(err, accounts) {
-    //   if (err) res.send(err);
-
-    //   res.send(accounts);
-    // })
-  },
-
-  getOne: function(req, res) {
-    // Find an account for current user
+  authorize: function(req, res, next) {
+    // Authorize a current user trying to access an account's routes
     var current_user = req.user;
-    if (req.params.account_id) {
-      var userBelongsToAccount = current_user.accounts.some(function (account) {
-        return account.equals(req.params.account_id);
-      });
-    } else {
-      res.status(422);
-      res.send({
-        "status": 422,
-        "message": "Account id missing"
-      })
-    }
+    var userBelongsToAccount = current_user.accounts.some(function (account) {
+      return account.equals(req.params.account_id);
+    });
     if (userBelongsToAccount) {
-      Account.findById(req.params.account_id, function(err, account) {
-        if (err) res.send(err)
-        
-        res.send(account)
-      })
+      next();
     } else {
       res.status(403);
       res.send({
         "status": 403,
-        "message": "The current user does not have permission to see this account"
+        "message": "User does not have access to this account."
       })
     }
+  },
+
+  getAll: function(req, res) {
+    // Find all accounts for current user
+    var current_user = req.user;
+    Account.where('_id').in(current_user.accounts).exec(function(err, accounts) {
+      if (err) res.send(err);
+
+      res.send(accounts);
+    })
+  },
+
+  getOne: function(req, res) {
+    // Return an account
+    Account.findById(req.params.account_id, function(err, account) {
+      if (err) res.send(err)
+      
+      res.send(account)
+    })
   },
 
   create: function(req, res) {
@@ -63,65 +60,44 @@ var accounts = {
   },
 
   update: function(req, res) {
-    // Update an account for current user
-    var current_user = req.user;
-    if (req.params.account_id) {
-      var userBelongsToAccount = current_user.accounts.some(function (account) {
-        return account.equals(req.params.account_id);
-      });
-    } else {
-      res.status(422);
-      res.send({
-        "status": 422,
-        "message": "Account id missing"
-      })
-    }
-    if (userBelongsToAccount) {
-      Account.findById(req.params.account_id, function(err, account) {
-        if (err) res.send(err)
+    // Update an account
+    Account.findById(req.params.account_id, function(err, account) {
+      if (err) res.send(err)
 
-        if (req.body.account_name) account.name = req.body.account_name;
-        if (req.body.users) account.users.push(req.body.users);
-        
-        account.save(function(err) {
-          if (err) res.send(err);
+      if (req.body.account_name) account.name = req.body.account_name;
+      if (req.body.users) account.users.push(req.body.users);
+      
+      account.save(function(err) {
+        if (err) res.send(err);
 
-          res.send(account);
-        })
+        res.send(account);
       })
-    } else {
-      res.status(403);
-      res.send({
-        "status": 403,
-        "message": "The current user does not have permission to update this account"
-      })
-    }
+    })
   },
 
   delete: function(req, res) {
-    // Delete an account for current user if they have permission to do so
+    // Delete an account
     var current_user = req.user;
-    if (req.params.account_id) {
-      var userBelongsToAccount = current_user.accounts.some(function (account) {
-        return account.equals(req.params.account_id);
-      });
-    } else {
-      res.status(422);
-      res.send({
-        "status": 422,
-        "message": "Account id missing"
-      })
-    }
     Account.findById(req.params.account_id, function(err, account) {
       if (err) res.send(err);
 
-      if (userBelongsToAccount && account.creator.equals(current_user.id)) {
-        account.remove({
-          _id: req.params.account_id
-        }, function(err, account) {
+      if (account.creator.equals(current_user.id)) {
+        // Remove the account and its reference in associated users
+        User.where('_id').in(account.users).exec(function(err, users) {
           if (err) res.send(err);
-          
-          res.json({message: "Account removed!"})
+
+          for(var i = 0; i < users.length; i++) {
+            users[i].accounts.remove(account.id);
+            users[i].save(function(err) {if (err) res.send(err)});
+          }
+
+          account.remove({
+            _id: req.params.account_id
+          }, function(err) {
+            if (err) res.send(err);
+            
+            res.send({message: "Account removed!"})
+          })
         })
       } else {
         res.status(403);

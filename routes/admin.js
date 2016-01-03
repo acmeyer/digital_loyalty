@@ -57,23 +57,68 @@ var admin = {
   // Accounts
   accounts: {
     getAll: function(req, res) {
-      res.json();
+      Account.find(function(err, accounts) {
+        if (err) res.send(err);
+        
+        res.send(accounts)
+      })
     },
 
     getOne: function(req, res) {
-      res.json();
+      Account.findById(req.params.id, function(err, account) {
+        if (err) res.send(err)
+        
+        res.send(account)
+      })
     },
 
     create: function(req, res) {
-      res.json();
+      var account_params = {
+        name: req.body.account_name,
+        creator: req.body.creator_id,
+        users: req.body.users
+      }
+      Account.create(account_params, function(err, account) {
+        if (err) res.send(err)
+
+        User.where('_id').in(account.users).exec(function(err, users) {
+          if (err) res.send(err);
+
+          for(var i = 0; i < users.length; i++) {
+            users[i].accounts.push(account.id);
+            users[i].save(function(err) {if (err) res.send(err)});
+          }
+          res.send(account)
+        })
+      })
     },
 
     update: function(req, res) {
-      res.json();
+      res.send();
     },
 
     delete: function(req, res) {
-      res.json();
+      Account.findById(req.params.account_id, function(err, account) {
+        if (err) res.send(err);
+
+        // Remove the account and its reference in associated users
+        User.where('_id').in(account.users).exec(function(err, users) {
+          if (err) res.send(err);
+
+          for(var i = 0; i < users.length; i++) {
+            users[i].accounts.remove(account.id);
+            users[i].save(function(err) {if (err) res.send(err)});
+          }
+
+          account.remove({
+            _id: req.params.account_id
+          }, function(err) {
+            if (err) res.send(err);
+            
+            res.send({message: "Account removed!"})
+          })
+        })
+      })
     }
   },
 

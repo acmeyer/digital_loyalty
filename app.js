@@ -15,7 +15,7 @@ if (process.env.NODE_ENV !== 'production'){
 
 var app = express();
 
-var auth = require('./routes/auth.js');
+var auth = require('./controllers/auth.js');
 
 // Database
 mongoose.connect(process.env.MONGOLAB_URI, function(err, db) {

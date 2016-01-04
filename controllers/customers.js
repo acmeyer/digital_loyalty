@@ -1,9 +1,6 @@
-var express = require('express');
-var router = express.Router();
+var Account = require('../models/account');
 
-var Transaction = require('../models/transaction');
-
-var transactions = {
+var customers = {
   getAll: function(req, res) {
     res.send();
   },
@@ -25,4 +22,4 @@ var transactions = {
   }
 }
 
-module.exports = transactions;
+module.exports = customers;

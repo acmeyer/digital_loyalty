@@ -6,7 +6,8 @@ var AccountSchema = new Schema({
   walletAddress: String,
   creator: { type: Schema.Types.ObjectId, ref: 'User'}, // limit to role 'Merchant'?
   users: [{ type: Schema.Types.ObjectId, ref: 'User' }], // limit to role 'Merchant'?
-  customers: [{ type: Schema.Types.ObjectId, ref: 'User' }] // limit to role 'Customer'?
+  customers: [{ type: Schema.Types.ObjectId, ref: 'User' }], // limit to role 'Customer'?
+  transactions: [{ type: Schema.Types.ObjectId, ref: 'Transaction' }]
 });
 
 module.exports = mongoose.model('Account', AccountSchema);

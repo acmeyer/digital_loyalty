@@ -1,6 +1,3 @@
-var express = require('express');
-var router = express.Router();
-
 var User = require('../models/user');
 var Account = require('../models/account');
 var Transaction = require('../models/transaction');

@@ -3,13 +3,13 @@ var jwt = require('jwt-simple');
 
 var router = express.Router();
  
-var auth = require('./auth')
-var admin = require('./admin')
-var assets = require('./assets')
-var accounts = require('./accounts')
-var transactions = require('./transactions')
-var customers = require('./customers')
-var users = require('./users')
+var auth = require('./controllers/auth')
+var admin = require('./controllers/admin')
+var assets = require('./controllers/assets')
+var accounts = require('./controllers/accounts')
+var transactions = require('./controllers/transactions')
+var customers = require('./controllers/customers')
+var users = require('./controllers/users')
  
 /*
  * Public routes
@@ -85,6 +85,6 @@ router.get('/api/v1/admin/transactions', admin.transactions.getAll);
 router.get('/api/v1/admin/transaction/:id', admin.transactions.getOne);
 router.post('/api/v1/admin/transaction/', admin.transactions.create);
 router.put('/api/v1/admin/transaction/:id', admin.transactions.update);
-router.delete('/api/v1/admin/transaction/:id', admin.Transactions.delete);
+router.delete('/api/v1/admin/transaction/:id', admin.transactions.delete);
  
 module.exports = router;

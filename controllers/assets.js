@@ -7,25 +7,25 @@ var assets = {
   /* GET all assets */
   getAll: function(req, res) {
     findAccount(req.params.account_id, function(err, account) {
-      if (account.walletAddress) {
-        colu.coloredCoins.getAddressInfo({address: account.walletAddress}, function(err, body) {
-          if (err) res.send(err);
-          res.send(body.assets);
-        })
-      } else {
-        // There is no wallet address for this account yet so just return an empty array.
-        res.send([]);
+      if (err) {
+        res.status(422)
+        res.send(err)
       }
+      res.send(account.assets);
     })
   },
 
   /* GET asset */
   getOne: function(req, res) {
+    console.log(req.params.id);
     Asset.findById(req.params.id, function(err, asset) {
-      if (err) res.send(err)
+      if (err) {
+        res.status(422)
+        res.send(err)
+      }
 
       // Get data from blockchain
-      colu.coloredCoins.getAssetData({assetId: asset.id}, function(err, body) {
+      colu.coloredCoins.getAssetData({assetId: asset.assetId}, function(err, body) {
         if (err) res.send(err);
         res.send(body);
       })
@@ -35,7 +35,10 @@ var assets = {
   /* CREATE asset */
   create: function(req, res) {
     findAccount(req.params.account_id, function(err, account) {
-      if (err) res.send(err);
+      if (err) {
+        res.status(422)
+        res.send(err);
+      }
 
       var assetName = req.body.name
       var assetDescription = req.body.description
@@ -52,7 +55,7 @@ var assets = {
         'divisibility': "0"
       }
 
-      if (account.walletAddress) settings.issueAdress = account.walletAddress;
+      if (account.walletAddress) settings.issueAddress = account.walletAddress;
 
       colu.issueAsset(settings, function (err, result) {
         if (err) return res.send(err)
@@ -61,18 +64,20 @@ var assets = {
           assetId: result.assetId
         });
 
-        // // if an account's wallet address is empty, 
-        // // populate it with the returned asset issue address
+        // if an account's wallet address is empty, 
+        // populate it with the returned asset issue address
         if (account.walletAddress === null || account.walletAddress === 'undefined') {
-          account.update({walletAddress: result.issueAdress}, function (err, raw) {
-            if (err) return res.send(err);
+          account.update({walletAddress: result.issueAddress}, function (err, raw) {
+            if (err) console.log(err);
           })
         }
         
         // record the transaction for later access
-        createTransaction(result.txId, "Issue", account);
+        createTransaction(result.txid, "Issue", account);
 
-        asset.save(function(err) {
+        // Save asset and add it to an account
+        account.assets.push(asset);
+        account.save(function(err) {
           if (err) {
             res.send(err);
           } else {
@@ -87,10 +92,16 @@ var assets = {
   /* SEND asset */
   send: function(req, res) {
     findAccount(req.params.account_id, function(err, account) {
-      if (err) res.send(err);
+      if (err) {
+        res.status(422)
+        res.send(err);
+      }
       
       Asset.findById(req.params.id, function(err, asset) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err);
+        }
 
         var assetId = asset.assetId
         var toAddress = req.body.toAddress
@@ -98,18 +109,21 @@ var assets = {
         var amount = req.body.amount
 
         var settings = {
-          'from': fromAddress,
+          'from': [fromAddress],
           'to': [{
-            'address': address,
+            'address': toAddress,
             'assetId': assetId,
             'amount': amount
           }]
         }
         colu.sendAsset(settings, function (err, result) {
-          if (err) return send(err);
+          if (err) {
+            res.status(422)
+            res.send(err);
+          }
 
           // record the transaction for later access
-          createTransaction(result.txId, "Send", account);
+          createTransaction(result.txid, "Send", account);
           
           res.send({ message: "Asset sent!"});
         })
@@ -121,11 +135,17 @@ var assets = {
   update: function(req, res) {
     // Not sure there is much to update so this method may be unnecessary
     Asset.findById(req.params.id, function(err, asset) {
-      if (err) res.send(err);
+      if (err) {
+        res.status(422)
+        res.send(err);
+      }
 
       // Update many different fields potentially here
       asset.save(function(err) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err);
+        }
         
         // Can we also update info of the asset on the blockchain?
         res.send({ message: "Asset updated!"});
@@ -140,7 +160,10 @@ var assets = {
     Asset.remove({
       _id: req.params.asset_id
     }, function(err, asset) {
-      if (err) res.send(err);
+      if (err) {
+        res.status(422)
+        res.send(err);
+      }
       
       res.send({message: "Asset removed!"})
     })

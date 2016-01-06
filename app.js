@@ -69,6 +69,7 @@ colu = new Colu(settings)
 if (process.env.NODE_ENV !== 'production'){
   colu.on('connect', function () {
     console.log('connected to colu')
+    console.log(colu.hdwallet.getPrivateSeed())
   });
 }
 colu.init()

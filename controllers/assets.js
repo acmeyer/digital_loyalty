@@ -17,7 +17,6 @@ var assets = {
 
   /* GET asset */
   getOne: function(req, res) {
-    console.log(req.params.id);
     Asset.findById(req.params.id, function(err, asset) {
       if (err) {
         res.status(422)
@@ -26,7 +25,10 @@ var assets = {
 
       // Get data from blockchain
       colu.coloredCoins.getAssetData({assetId: asset.assetId}, function(err, body) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         res.send(body);
       })
     })
@@ -58,7 +60,10 @@ var assets = {
       if (account.walletAddress) settings.issueAddress = account.walletAddress;
 
       colu.issueAsset(settings, function (err, result) {
-        if (err) return res.send(err)
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         // Need to save more info about the asset here
         var asset = new Asset({
           assetId: result.assetId
@@ -150,22 +155,6 @@ var assets = {
         // Can we also update info of the asset on the blockchain?
         res.send({ message: "Asset updated!"});
       })
-    })
-  },
-
-  /* DELETE asset */
-  delete: function(req, res) {
-    // Not sure if we should have this functionality or not since you can't actually
-    // remove assets from the Blockchain.
-    Asset.remove({
-      _id: req.params.asset_id
-    }, function(err, asset) {
-      if (err) {
-        res.status(422)
-        res.send(err);
-      }
-      
-      res.send({message: "Asset removed!"})
     })
   }
 }

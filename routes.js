@@ -41,18 +41,14 @@ router.get('/api/v1/account/:account_id/asset/:id', accounts.authorize, assets.g
 router.post('/api/v1/account/:account_id/asset/', accounts.authorize, assets.create);
 router.post('/api/v1/account/:account_id/asset/:id/send', accounts.authorize, assets.send);
 router.put('/api/v1/account/:account_id/asset/:id', accounts.authorize, assets.update);
-router.delete('/api/v1/account/:account_id/asset/:id', accounts.authorize, assets.delete);
 
 // Account's Transactions
 router.get('/api/v1/account/:account_id/transactions', accounts.authorize, transactions.getAll);
 router.get('/api/v1/account/:account_id/transaction/:id', accounts.authorize, transactions.getOne);
-router.post('/api/v1/account/:account_id/transaction/', accounts.authorize, transactions.create);
-router.put('/api/v1/account/:account_id/transaction/:id', accounts.authorize, transactions.update);
 
 // Account's Customers
 router.get('/api/v1/account/:account_id/customers', accounts.authorize, customers.getAll);
 router.get('/api/v1/account/:account_id/customer/:id', accounts.authorize, customers.getOne);
-router.post('/api/v1/account/:account_id/customer/', accounts.authorize, customers.create);
 router.put('/api/v1/account/:account_id/customer/:id', accounts.authorize, customers.update);
  
 /*
@@ -86,5 +82,9 @@ router.get('/api/v1/admin/transaction/:id', admin.transactions.getOne);
 router.post('/api/v1/admin/transaction/', admin.transactions.create);
 router.put('/api/v1/admin/transaction/:id', admin.transactions.update);
 router.delete('/api/v1/admin/transaction/:id', admin.transactions.delete);
+
+// All Customers
+router.get('/api/v1/admin/customers', admin.customers.getAll);
+router.get('/api/v1/admin/customer/:id', admin.customers.getOne);
  
 module.exports = router;

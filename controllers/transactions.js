@@ -1,25 +1,36 @@
 var Transaction = require('../models/transaction');
+var Account = require('../models/account');
 
 var transactions = {
   getAll: function(req, res) {
-    res.send();
+    findAccount(req.params.account_id, function(err, account) {
+      if (err) {
+        res.status(422)
+        res.send(err)
+      }
+
+      res.send(account.transactions)
+    })
   },
 
   getOne: function(req, res) {
-    res.send();
-  },
+    Transaction.findById(req.params.id, function(err, transaction) {
+      if (err) {
+        res.status(422)
+        res.send(err)
+      }
 
-  create: function(req, res) {
-    res.send();
-  },
-
-  update: function(req, res) {
-    res.send();
-  },
-
-  delete: function(req, res) {
-    res.send();
+      res.send(transaction)
+    })
   }
+}
+
+function findAccount (account_id, cb) {
+  Account.findById(account_id, function(err, account) {
+    if (err) return cb(err);
+    
+    return cb(null, account);
+  })
 }
 
 module.exports = transactions;

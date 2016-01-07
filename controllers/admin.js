@@ -9,7 +9,10 @@ var admin = {
   users: {
     getAll: function(req, res) {
       User.find(function(err, users) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         
         res.send(users);
       })
@@ -17,7 +20,10 @@ var admin = {
 
     getOne: function(req, res) {
       User.findById(req.params.id, function(err, user) {
-        if (err) res.send(err)
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         
         res.send(user)
       })
@@ -30,21 +36,40 @@ var admin = {
         role: req.body.role
       }
       User.create(user_params, function(err, user) {
-        if (err) res.send(err)
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
 
         res.send(user)
       })
     },
 
     update: function(req, res) {
-      res.send();
+      User.findById(req.params.id, function(err, user) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+        user.update(req.body.user, function(err, user) {
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
+
+          res.send(user)
+        })
+      })
     },
 
     delete: function(req, res) {
       User.remove({
         _id: req.params.user_id
       }, function(err, user) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         
         res.json({message: "User removed!"})
       })
@@ -55,7 +80,10 @@ var admin = {
   accounts: {
     getAll: function(req, res) {
       Account.find(function(err, accounts) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         
         res.send(accounts)
       })
@@ -63,23 +91,27 @@ var admin = {
 
     getOne: function(req, res) {
       Account.findById(req.params.id, function(err, account) {
-        if (err) res.send(err)
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         
         res.send(account)
       })
     },
 
     create: function(req, res) {
-      var account_params = {
-        name: req.body.account_name,
-        creator: req.body.creator_id,
-        users: req.body.users
-      }
-      Account.create(account_params, function(err, account) {
-        if (err) res.send(err)
+      Account.create(req.body.account, function(err, account) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
 
         User.where('_id').in(account.users).exec(function(err, users) {
-          if (err) res.send(err);
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
 
           for(var i = 0; i < users.length; i++) {
             users[i].accounts.push(account.id);
@@ -91,16 +123,34 @@ var admin = {
     },
 
     update: function(req, res) {
-      res.send();
+      Account.findById(req.params.id, function(err, account) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+        
+        account.update(req.body.account, function(err, account) {
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
+        })
+      })
     },
 
     delete: function(req, res) {
       Account.findById(req.params.account_id, function(err, account) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
 
         // Remove the account and its reference in associated users
         User.where('_id').in(account.users).exec(function(err, users) {
-          if (err) res.send(err);
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
 
           for(var i = 0; i < users.length; i++) {
             users[i].accounts.remove(account.id);
@@ -110,7 +160,10 @@ var admin = {
           account.remove({
             _id: req.params.account_id
           }, function(err) {
-            if (err) res.send(err);
+            if (err) {
+              res.status(422)
+              res.send(err)
+            }
             
             res.send({message: "Account removed!"})
           })
@@ -122,23 +175,67 @@ var admin = {
   // Transactions
   transactions: {
     getAll: function(req, res) {
-      res.send();
+      Transaction.find(function(err, transactions) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+
+        res.send(transactions)
+      })
     },
 
     getOne: function(req, res) {
-      res.send();
+      Transaction.findById(req.params.id, function(err, transaction) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+
+        res.send(transaction)
+      })
     },
 
     create: function(req, res) {
-      res.send();
+      Transaction.create(req.body.transaction, function(err, transaction) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+
+        res.send(transaction)
+      })
     },
 
     update: function(req, res) {
-      res.send();
+      Transaction.findById(req.params.id, function(err, transaction) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+
+        transaction.update(req.body.transaction, function(err, transaction) {
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
+
+          res.send(transaction)
+        })
+      })
     },
 
     delete: function(req, res) {
-      res.send();
+      Transaction.remove({
+        _id: req.params.id
+      }, function(err, asset) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+        
+        res.send(message: "Transaction removed!")
+      })
     }
   },
 
@@ -147,16 +244,22 @@ var admin = {
     /* GET all assets */
     getAll: function(req, res) {
       Asset.find(function(err, assets) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
           
         // Get asset information from the blockchain
         blockchainAssets = [];
-        assets.each(function(index, asset) {
-          colu.coloredCoins.getAssetData({assetId: asset.id}, function(err, body) {
-            if (err) res.send(err);
-            blockchainAssets.push(JSON.stringify(body));
+        for (var i = 0; i < assets.length; i++) {
+          colu.coloredCoins.getAssetData({assetId: assets[i].id}, function(err, body) {
+            if (err) {
+              res.status(422)
+              res.send(err)
+            }
+            blockchainAssets.push(body);
           })
-        });
+        }
         res.json(blockchainAssets);
       })
     },
@@ -164,11 +267,17 @@ var admin = {
     /* GET asset */
     getOne: function(req, res) {
       Asset.findById(req.params.id, function(err, asset) {
-        if (err) res.send(err)
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
 
         // Get data from blockchain
         colu.coloredCoins.getAssetData({assetId: asset.id}, function(err, body) {
-          if (err) res.send(err);
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
           res.json(JSON.stringify(body));
         })
       })
@@ -176,28 +285,38 @@ var admin = {
 
     /* CREATE asset */
     create: function(req, res) {
-      var assetName = req.body.assetName
+      var assetName = req.body.name
+      var assetDescription = req.body.description
       var amount = req.body.amount
 
       // Need to be more flexible here to accept potentially lots of different information but also make sure not anything can be sent
       var settings = {
         metadata: {
-         'assetName': assetName
+         'assetName': assetName,
+         'description': assetDescription
         },
-        'amount': amount
+        'amount': amount,
+        'divisibility': "0"
       }
 
       colu.issueAsset(settings, function (err, result) {
-        if (err) return res.send(err)
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
 
         // Need to save more info about the asset here
         var asset = new Asset({
           assetId: result.assetId
         });
 
+        // Create transaction for record keeping
+        Transaction.create({txId: result.txid, type: "Issue"}, function(err, transaction) {if (err) console.log(err)});
+
         asset.save(function(err) {
           if (err) {
-            res.send(err);
+            res.status(422)
+            res.send(err)
           } else {
             res.status(200);
             res.json({message: 'Created asset!'});
@@ -209,15 +328,18 @@ var admin = {
     /* SEND asset */
     send: function(req, res) {
       Asset.findById(req.params.id, function(err, asset) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
 
         var assetId = asset.assetId
         var toAddress = req.body.toAddress
-        var fromAddress = asset.issueAdress
+        var fromAddress = asset.issueAddress
         var amount = req.body.amount
 
         var settings = {
-          'from': fromAddress,
+          'from': [fromAddress],
           'to': [{
             'address': address,
             'assetId': assetId,
@@ -225,37 +347,80 @@ var admin = {
           }]
         }
         colu.sendAsset(settings, function (err, result) {
-          if (err) return next(err)
-          // Also want to save transaction information here
-          res.json({ message: "Asset sent!"})
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
+          
+          // Create transaction for record keeping
+          Transaction.create({txId: result.txid, type: "Issue"}, function(err, transaction) {if (err) console.log(err)});
+
+          res.send({ message: "Asset sent!"})
         })
       })
     },
 
     /* UPDATE asset */
     update: function(req, res) {
+      // Not sure there is much to update so this method may be unnecessary
       Asset.findById(req.params.id, function(err, asset) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
 
         // Update many different fields potentially here
         asset.save(function(err) {
-          if (err) res.send(err);
+          if (err) {
+            res.status(422)
+            res.send(err)
+          }
           
           // Can we also update info of the asset on the blockchain?
-          res.json({ message: "Asset updated!"});
+          res.send({ message: "Asset updated!"});
         })
       })
     },
 
     /* DELETE asset */
     delete: function(req, res) {
+      // Not sure if we should have this functionality or not since you can't actually
+      // remove assets from the Blockchain.
       Asset.remove({
-        _id: req.params.asset_id
+        _id: req.params.id
       }, function(err, asset) {
-        if (err) res.send(err);
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
         
         // Remove from the blockchain?
         res.json({message: "Asset removed!"})
+      })
+    }
+  }
+
+  // Customers
+  customers: {
+    getAll: function(req, res) {
+      User.where('role').equals('Customer').exec(function(err, users) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+
+        res.send(users)
+      })
+    },
+
+    getOne: function(req, res) {
+      User.findById(req.params.id, function(err, user) {
+        if (err) {
+          res.status(422)
+          res.send(err)
+        }
+
+        res.send(user)
       })
     }
   }
